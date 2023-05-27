@@ -1,28 +1,20 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Outlet, useNavigate } from "react-router-dom";
-import socket from "../socket/socketConnection";
+import socket from "../socketConnection";
 
 import LeftSide from "../components/LeftSide";
 import RightSide from "../components/RightSide";
 import ProfileInfo from "../components/right-side/ProfileInfo";
 
 import IUser from "../interfaces/User";
-import IContact from "../interfaces/Contact";
-
-interface UserContact {
-	user: IContact;
-	_id: string;
-}
-
-interface UserContacts extends IUser {
-	contacts: UserContact[];
-}
+import { getItem } from "../utils/localStorageItems";
 
 const RootLayout = () => {
 	const navigate = useNavigate();
+	const [onlineUsers, setIsOnlineUsers] = useState<string[]>([]);
 	const [openPersonInfo, setOpenPersonInfo] = useState(false);
-	const [user, setUser] = useState<UserContacts>({
+	const [user, setUser] = useState<IUser>({
 		_id: "",
 		firstName: "",
 		lastName: "",
@@ -30,31 +22,14 @@ const RootLayout = () => {
 		username: "",
 		avatar: "",
 		socketId: "",
-		contacts: [],
-	} as UserContacts);
-
-	async function fetchUserdetails() {
-		try {
-			const user = await axios(`${import.meta.env.VITE_PORT}/api/users/user`, {
-				method: "GET",
-				headers: {
-					Authorization: localStorage.getItem("token"),
-				},
-			});
-			const resData: UserContacts = user.data;
-			// console.log(resData);
-			setUser(resData);
-		} catch (error) {
-			console.log(error);
-		}
-	}
+	} as IUser);
 
 	function handlePersonInfo(state: boolean) {
 		setOpenPersonInfo(state);
 	}
 
 	useEffect(() => {
-		if (!localStorage.getItem("token")) {
+		if (!getItem("token")) {
 			navigate("/auth");
 			return;
 		} else {
@@ -66,8 +41,32 @@ const RootLayout = () => {
 	}, []);
 
 	useEffect(() => {
+		async function fetchUserdetails() {
+			try {
+				const user = await axios(`${import.meta.env.VITE_PORT}/api/users/user`, {
+					method: "GET",
+					headers: {
+						Authorization: getItem("token"),
+					},
+				});
+				const resData: IUser = user.data;
+				setUser(resData);
+			} catch (error) {
+				console.log(error);
+			}
+		}
 		fetchUserdetails();
-	}, [openPersonInfo]);
+	}, []);
+
+	// //example contactId and messages state
+	// const contactId = "asdad21312312";
+	// const [messages, setMessages] = useState([])
+
+	useEffect(() => {
+		socket.on("connected-users", (connectedUsers) => {
+			setIsOnlineUsers(connectedUsers);
+		});
+	}, []);
 
 	return (
 		<div className="w-screen h-screen md:flex relative overflow-hidden">
@@ -78,8 +77,8 @@ const RootLayout = () => {
 				lastName={user?.lastName}
 				avatar={user.avatar}
 				username={user?.username}
-				contacts={user?.contacts}
 				onOpenPersonInfo={handlePersonInfo}
+				onlineUsers={onlineUsers}
 			/>
 			{openPersonInfo && (
 				<ProfileInfo

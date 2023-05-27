@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { getItem } from "../utils/localStorageItems";
 
 const Authentication = () => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (localStorage.getItem("token")) {
+		if (getItem("token")) {
 			navigate("/");
 		} else {
 			navigate("/auth");

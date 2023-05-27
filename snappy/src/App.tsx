@@ -1,8 +1,5 @@
-import { useEffect } from "react";
-import { createBrowserRouter, RouterProvider, useNavigate } from "react-router-dom";
-import socket from "./socket/socketConnection";
-
-import { ShowCompProvider } from "./context/show-comp";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ContactProvider } from "./context/contactsContext";
 
 import RootLayout from "./routes/Root";
 import Mid from "./components/Mid";
@@ -11,6 +8,8 @@ import Authentication from "./routes/Authentication";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/ForgotPassword";
+import { MessagesProvider } from "./context/messagesContext";
+import { SearchProvider } from "./context/searchContext";
 
 const router = createBrowserRouter([
 	{
@@ -49,9 +48,13 @@ const router = createBrowserRouter([
 
 const App = () => {
 	return (
-		<ShowCompProvider>
-			<RouterProvider router={router} />
-		</ShowCompProvider>
+		<SearchProvider>
+			<MessagesProvider>
+				<ContactProvider>
+					<RouterProvider router={router} />
+				</ContactProvider>
+			</MessagesProvider>
+		</SearchProvider>
 	);
 };
 

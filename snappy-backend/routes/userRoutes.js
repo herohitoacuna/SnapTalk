@@ -16,7 +16,7 @@ const {
 	getUser,
 	searchUser,
 	patchUpdateProfile,
-	// patchUpdateAvatar,
+	getContacts,
 	getContactInfo,
 	patchAddToContacts,
 } = require("../controllers/userController");
@@ -24,11 +24,9 @@ const { verifyToken } = require("../middlewares/authToken");
 
 router.get("/user", getUser);
 router.get("/user/search", searchUser);
-
 router.patch("/user", verifyToken, upload.single("avatar"), patchUpdateProfile);
-// router.patch("/user/upload-avatar", verifyToken, upload.single("avatar"), patchUpdateAvatar);
-
+router.get("/user/contacts", verifyToken, getContacts);
+router.patch("/user/contacts/:contactId", verifyToken, patchAddToContacts);
 router.get("/user/:contactId", getContactInfo);
-router.patch("/user/:userId/contacts/:contactId", patchAddToContacts);
 
 module.exports = router;

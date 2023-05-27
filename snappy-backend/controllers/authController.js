@@ -39,7 +39,6 @@ async function login(req, res) {
 		const token = authToken.createToken({
 			id: userResult._id,
 			email: userResult.email,
-			username: userResult.username,
 		});
 
 		return res.status(200).json({ _id: userResult._id, token });

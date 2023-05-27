@@ -1,86 +1,80 @@
-import DoneIcon from "@mui/icons-material/Done";
-import { Avatar } from "@mui/material";
-import CircularProgress from "@mui/material/CircularProgress";
+import { useContext, useEffect, useRef } from "react";
+import IMessage from "../../interfaces/Message";
+
 import DateSeparator from "./DateSeparator";
+import Box from "@mui/material/Box";
+import { getItem } from "../../utils/localStorageItems";
+import { MessagesContext } from "../../context/messagesContext";
+import { useParams } from "react-router-dom";
+import SenderMessage from "./SenderMessage";
+import RecipientMessage from "./RecipientMessage";
 
-interface MessageConvoProps {
-	messages: Message[];
-	loginId: string;
-}
+const MessageConvo = () => {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const { messages } = useContext(MessagesContext);
 
-interface Message {
-	id: string;
-	sender: string;
-	recipient: string;
-	content: string;
-	timestamp: Date;
-	seen: boolean;
-}
+	useEffect(() => {
+		scrollToBottom();
+	}, [messages]);
 
-const MessageConvo: React.FC<MessageConvoProps> = ({ messages, loginId }) => {
-	// check if the message.sender === userId
-	// check if the previous timestamp is not equal to the time stampnow
-	const conversation: JSX.Element[] = messages.map((msg: Message, index: number) => {
-		const { content, id, recipient, sender, timestamp, seen } = msg;
+	function scrollToBottom() {
+		if (containerRef.current) {
+			containerRef.current.scrollTop = containerRef.current.scrollHeight;
+		}
+	}
 
-		const isSentByUser = sender === loginId;
-		const isLoading = false;
-		const isSeen = false;
+	const conversation: React.ReactNode[] = messages.map((msg, i) => {
+		const { _id, sender, recipient, content, timestamp, seen } = msg;
+		const fromSelf = getItem("id") === sender;
 
-		// TIME SENT
-		const timeSent = timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-		// DATE
-		const prevTime = index > 0 ? messages[index - 1].timestamp.toLocaleDateString() : null;
-		const curTime = timestamp.toLocaleDateString();
-		const sameDay = curTime === prevTime;
+		const date = new Date(timestamp);
+		const msgDate = date.toLocaleDateString();
+		const prevMsgDate = new Date(messages[i === 0 ? i : i - 1]?.timestamp).toLocaleDateString();
 
 		// TODAY OR YESTERDAY
 		const dateNow = new Date();
-		const sameMonth = dateNow.getMonth() === timestamp.getMonth();
-		const sameYear = dateNow.getFullYear() === timestamp.getFullYear();
+		const sameMonth = dateNow.getMonth() === date.getMonth();
+		const sameYear = dateNow.getFullYear() === date.getFullYear();
 
-		// style
-		const containerPosition = isSentByUser ? "justify-end" : null;
-		const bgColor = isSentByUser ? "bg-yellow-200" : "bg-blue-200";
-		const msgPosition = isSentByUser ? "justify-end" : null;
-		const direction = isSentByUser ? "flex-row-reverse" : null;
+		let day = msgDate;
+		if (dateNow.toLocaleDateString() === date.toLocaleDateString()) {
+			day = "TODAY";
+		}
+		if (sameYear && sameMonth && dateNow.getDate() - date.getDate() === 1) {
+			day = "YESTERDAY";
+		}
 
 		return (
-			<div key={id}>
-				{!sameDay && (
-					<DateSeparator
-						date={
-							curTime === dateNow.toLocaleDateString()
-								? "TODAY"
-								: dateNow.getDate() - timestamp.getDate() === 1 && sameMonth && sameYear
-								? "YESTERDAY"
-								: curTime
-						}
+			<div key={_id}>
+				{i === 0 || msgDate !== prevMsgDate ? <DateSeparator date={day} /> : null}
+
+				{fromSelf && (
+					<SenderMessage
+						content={content}
+						timestamp={timestamp}
+						seen={seen}
 					/>
 				)}
-				<div className={`flex mb-3 ${direction}`}>
-					<div className={`flex w-full mx-2 ${containerPosition}`}>
-						<div className={`max-w-[75%] p-2 rounded-lg ${bgColor}`}>
-							<p>{content}</p>
 
-							<div className={`flex mt-2 ${direction}`}>
-								{!isLoading && isSeen ? (
-									<CircularProgress style={{ width: "15px", height: "15px" }} />
-								) : (
-									<DoneIcon style={{ width: "15px", height: "15px" }} />
-								)}
-
-								<span className={`text-xs text-slate-800`}>{timeSent}</span>
-							</div>
-						</div>
-					</div>
-				</div>
+				{!fromSelf && (
+					<RecipientMessage
+						content={content}
+						timestamp={timestamp}
+						seen={seen}
+					/>
+				)}
 			</div>
 		);
 	});
 
-	return <div className="grow w-full px-5 pt-5 pb-3 overflow-y-auto scroll-smooth">{conversation}</div>;
+	return (
+		<div
+			ref={containerRef}
+			className="grow w-full px-12 pt-5 pb-3 overflow-y-auto scroll-smooth
+				flex flex-col gap-5">
+			{conversation}
+		</div>
+	);
 };
 
 export default MessageConvo;

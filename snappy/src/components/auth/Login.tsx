@@ -1,20 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-
+import { useState } from "react";
 import axios from "axios";
-
 import { useForm } from "react-hook-form";
-import loginResolver from "../../utils/loginResolver";
-
+import loginResolver from "../../formResolver/loginResolver";
 import { NavLink, useNavigate } from "react-router-dom";
-
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { showErrorNotify } from "../../utils/showNotification";
 
-import LoadingPage from "../LoadingPage";
 import Form from "../shared/FormContainer";
 import AuthInput from "../shared/AuthInput";
 import Button from "../shared/Button";
 import Swal from "sweetalert2";
+import { setItem } from "../../utils/localStorageItems";
 
 type FormValues = {
 	email: string;
@@ -46,8 +42,8 @@ const Login = () => {
 		axios
 			.post(`${port}/api/auth/login`, data)
 			.then(({ data }) => {
-				localStorage.setItem("id", JSON.stringify(data?._id));
-				localStorage.setItem("token", data?.token);
+				setItem("id", data?._id);
+				setItem("token", data?.token);
 				reset();
 				Swal.fire("Login", "Welcome back to SnapTalk", "success");
 				setLoading(false);
@@ -59,24 +55,6 @@ const Login = () => {
 				showErrorNotify(error.response.data?.error);
 				setLoading(false);
 			});
-	}
-
-	function showErrorNotify(error: string) {
-		toast.error(error, {
-			position: "bottom-right",
-			autoClose: 5000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnFocusLoss: false,
-			pauseOnHover: false,
-			draggable: true,
-			progress: undefined,
-			theme: "light",
-		});
-	}
-
-	if (loading) {
-		return <LoadingPage />;
 	}
 
 	return (

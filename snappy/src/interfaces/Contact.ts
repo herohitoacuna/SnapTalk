@@ -1,10 +1,14 @@
-interface IContact {
+export interface IContact {
 	_id: string;
 	firstName: string;
 	lastName: string;
 	username: string;
 	email: string;
-	socketId: string;
+	avatar: string;
+	isOnline?: boolean;
 }
 
-export default IContact;
+export interface IUserContact {
+	user: IContact;
+	_id: string;
+}

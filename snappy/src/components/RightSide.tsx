@@ -1,31 +1,36 @@
-import { useEffect, useState } from "react";
-import { NavLink, redirect, useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { ContactContext } from "../context/contactsContext";
+import { removeItem } from "../utils/localStorageItems";
+
 import LogoutIcon from "@mui/icons-material/Logout";
 import RightTop from "./right-side/RightTop";
 import ContactList from "./right-side/ContactList";
-import socket from "../socket/socketConnection";
-import IContact from "../interfaces/Contact";
-
-interface UserContact {
-	user: IContact;
-	_id: string;
-}
+import socket from "../socketConnection";
 
 interface RightSideProps {
 	firstName: string;
 	lastName: string;
 	username: string;
 	avatar: string;
-	contacts: UserContact[];
 	onOpenPersonInfo: (state: boolean) => void;
+	onlineUsers: string[];
 }
 
-const RightSide: React.FC<RightSideProps> = ({ onOpenPersonInfo, firstName, lastName, username, contacts, avatar }) => {
+const RightSide: React.FC<RightSideProps> = ({
+	onOpenPersonInfo,
+	firstName,
+	lastName,
+	username,
+	avatar,
+	onlineUsers,
+}) => {
 	const navigate = useNavigate();
 
 	function handleLogout() {
-		localStorage.removeItem("token");
-		localStorage.removeItem("id");
+		removeItem("token");
+		removeItem("id");
+		// delete socket.auth?.token;
 		socket.disconnect();
 		navigate("/auth");
 	}
@@ -40,7 +45,7 @@ const RightSide: React.FC<RightSideProps> = ({ onOpenPersonInfo, firstName, last
 				avatar={avatar}
 			/>
 
-			<ContactList contacts={contacts} />
+			<ContactList onlineUsers={onlineUsers} />
 
 			<footer className="w-full flex flex-col items-center absolute bottom-0 ">
 				<button

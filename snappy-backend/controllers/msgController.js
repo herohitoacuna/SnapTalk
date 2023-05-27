@@ -1,28 +1,51 @@
 const Message = require("../models/Message");
 
 async function getMessages(req, res) {
-	const { senderId, receiverId } = req.body;
+	const { id: senderId } = req.user;
+	const { contactId: recipientId } = req.params;
 
-	if (!senderId || !receiverId) {
+	if (!senderId || !recipientId) {
 		return res.status(400).json({ error: "Sender ID and receiver ID are required." });
 	}
 
 	try {
 		const messages = await Message.find({
 			$or: [
-				{ sender: senderId, receiver: receiverId },
-				{ sender: receiverId, receiver: senderId },
+				{ sender: senderId, recipient: recipientId },
+				{ sender: recipientId, recipient: senderId },
 			],
-		})
-			.sort({ createdAt: -1 })
-			.limit(20);
+		}).sort({ timestamp: 1 });
 
-		return res.status(200).json({ result: messages });
+		return res.status(200).json(messages);
 	} catch (error) {
 		return res.status(500).json({ error: `Server error ${error.message}` });
 	}
 }
 
-async function putSeenMessages(req, res) {}
+async function putSeenMessages(req, res) {
+	try {
+		const { id: senderId } = req.user;
+		const { contactId: recipientId } = req.params;
+
+		if (!senderId || !recipientId) {
+			return res.status(400).json({ error: "Sender ID and receiver ID are required." });
+		}
+
+		const messages = await Message.updateMany(
+			{
+				$or: [
+					{ sender: senderId, recipient: recipientId },
+					{ sender: recipientId, recipient: senderId },
+				],
+				seen: false,
+			},
+			{ seen: true },
+		);
+
+		return res.status(200).json({ result: "success" });
+	} catch (error) {
+		return res.status(500).json({ error: `Server error ${error.message}` });
+	}
+}
 
 module.exports = { getMessages, putSeenMessages };

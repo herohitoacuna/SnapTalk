@@ -1,9 +1,18 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import midBackground from "../assets/mid-bg.jpeg";
 import midBackground2 from "../assets/mid-bg2.jpeg";
+import { SearchContext } from "../context/searchContext";
 
 const MidDefaultView = () => {
+	const searchCtx = useContext(SearchContext);
 	const [bgImage, setBgImage] = useState(midBackground);
+
+	function handleConnectWithPeople() {
+		if (searchCtx?.ref.current) {
+			searchCtx.ref.current.focus();
+		}
+	}
+	console.log(searchCtx?.focus);
 
 	return (
 		<div
@@ -19,7 +28,9 @@ const MidDefaultView = () => {
 					style={{ backgroundImage: `url(${midBackground})` }}
 					className="w-[5rem] h-[5rem] bg-cover bg-white outline outline-white rounded-md"></button>
 			</div>
-			<button className="px-6 py-4 outline outline-2 outline-white  text-white text-lg bg-violet-900/30 font-medium rounded-md item hover-container">
+			<button
+				onClick={handleConnectWithPeople}
+				className="px-6 py-4 outline outline-2 outline-white  text-white text-lg bg-violet-900/30 font-medium rounded-md item hover-container">
 				Connect With People
 			</button>
 		</div>

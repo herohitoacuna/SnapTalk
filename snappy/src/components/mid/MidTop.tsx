@@ -6,7 +6,6 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import CallIcon from "@mui/icons-material/Call";
 import IconButton from "../shared/IconButton";
 
-import { ShowCompContext } from "../../context/show-comp";
 import IUser from "../../interfaces/User";
 
 type MidTopProps = {
@@ -14,17 +13,10 @@ type MidTopProps = {
 };
 
 const MidTop: React.FC<MidTopProps> = ({ contact }) => {
-	const { handleMidContainer } = useContext(ShowCompContext);
-
-	function handleCloseMid() {
-		handleMidContainer(false);
-	}
-
 	return (
 		<div className="w-full flex items-center md:px-7 py-3 px-2 text-white bg-container">
 			<IconButton
 				className="lg:hidden hover-container"
-				onClick={handleCloseMid}
 				rounded={false}
 				icon={<ArrowBackIosNewIcon sx={{ color: "white", fontSize: "1.7rem" }} />}
 			/>
@@ -44,12 +36,12 @@ const MidTop: React.FC<MidTopProps> = ({ contact }) => {
 
 			<div className="ml-auto flex">
 				<IconButton
-					className="hover-container lg:mr-3"
-					icon={<CallIcon sx={{ color: "white", fontSize: "2.5rem" }} />}
-				/>
-				<IconButton
 					className="hover-container"
 					icon={<VideocamIcon sx={{ color: "white", fontSize: "2.5rem" }} />}
+				/>
+				<IconButton
+					className="hover-container lg:mr-3"
+					icon={<CallIcon sx={{ color: "white", fontSize: "2.5rem" }} />}
 				/>
 			</div>
 		</div>

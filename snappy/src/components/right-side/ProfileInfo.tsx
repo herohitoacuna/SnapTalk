@@ -1,11 +1,12 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import CircularProgress from "@mui/material/CircularProgress";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import { showSuccessNotify, showErrorNotify } from "../../utils/showNotification";
 import ProfileInput from "../shared/ProfileInput";
 import { useForm } from "react-hook-form";
 import axios from "axios";
-import updateProfileResolver from "../../utils/updateProfileResolver";
+import updateProfileResolver from "../../formResolver/updateProfileResolver";
 
 interface ProfileInfoProps {
 	firstName: string;
@@ -43,6 +44,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 		register,
 		getFieldState,
 		handleSubmit,
+		reset,
 		formState: { errors },
 	} = useForm<FormValues>({
 		resolver: updateProfileResolver,
@@ -57,34 +59,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	useEffect(() => {
 		setImageUrl(avatar);
 	}, [avatar]);
-
-	function showErrorNotify(error: string) {
-		toast.error(error, {
-			position: "bottom-right",
-			autoClose: 3000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnFocusLoss: false,
-			pauseOnHover: false,
-			draggable: true,
-			progress: undefined,
-			theme: "light",
-		});
-	}
-
-	function showSuccessNotify(message: string) {
-		toast.success(message, {
-			position: "bottom-right",
-			autoClose: 3000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnFocusLoss: false,
-			pauseOnHover: false,
-			draggable: true,
-			progress: undefined,
-			theme: "light",
-		});
-	}
 
 	function handleImageFile(e: ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0];
@@ -154,6 +128,13 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 		setButtonDisabled(false);
 		setLoading(false);
 		setDisabled(true);
+	}
+
+	function handleCancelClick(e: React.MouseEvent<HTMLButtonElement>) {
+		e.preventDefault();
+		setDisabled(true);
+		setImageUrl(avatar);
+		reset();
 	}
 
 	return (
@@ -256,10 +237,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 									Apply & Save
 								</button>
 								<button
-									onClick={(e) => {
-										e.preventDefault();
-										setDisabled(true);
-									}}
+									onClick={handleCancelClick}
 									type="button"
 									className="font-semibold px-4 py-2 rounded-md shadow shadow-black/20
 									disabled:opacity-50 disabled:cursor-not-allowed

@@ -1,41 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { TextareaAutosize } from "@mui/material";
 import EmojiPicker, { EmojiClickData, EmojiStyle } from "emoji-picker-react";
+import { MessagesContext } from "../../context/messagesContext";
+import { useParams } from "react-router-dom";
 
-interface MessageAreaProps {
-	onSendMsg: (msg: string) => void;
-}
-
-const MessageArea: React.FC<MessageAreaProps> = ({ onSendMsg }) => {
+const MessageArea = () => {
+	const { contactId } = useParams();
+	const { sendMessage: onSendMessage } = useContext(MessagesContext);
 	const [showEmojis, setShowEmojis] = useState<boolean>(false);
 	const [content, setContent] = useState<string>("");
 
-	const handleEnterSend = (e: any) => {
-		if (e.key === "Enter" && !e.shiftKey && content.trim()) {
-			handleClickSend();
-			console.log("Sent");
+	function handleClickSend() {
+		if (content.trim() && contactId) {
+			onSendMessage(content.trim(), contactId);
+			setContent("");
 		}
-	};
+	}
 
-	const handleClickSend = () => {
-		if (content.trim()) {
-			onSendMsg(content.trim());
+	function handleEnterSend(e: any) {
+		if (e.key === "Enter" && !e.shiftKey && content.trim() && contactId) {
+			e.preventDefault();
+			onSendMessage(content.trim(), contactId);
+			setContent("");
 		}
-		setContent("");
-	};
+	}
 
-	const handleContentChange = (e: any) => {
+	function handleContentChange(e: any) {
 		setContent(e.target?.value);
-	};
+	}
 
-	const handleSelectEmoji = (emojiData: EmojiClickData, event: any) => {
+	function handleSelectEmoji(emojiData: EmojiClickData, event: any) {
 		setContent((prev) => [...prev.split(""), emojiData.emoji].join(""));
-	};
+	}
 
 	return (
-		<div className="flex items-center justify-center p-5 border-r-[1px] border-violet-700 bg-container">
+		<div className="flex items-center justify-center p-5 border-r-[1px] border-violet-700 bg-container relative">
 			<SentimentSatisfiedAltIcon
 				className="hover:opacity-70 cursor-pointer"
 				onClick={(e) => setShowEmojis(!showEmojis)}
@@ -47,10 +48,8 @@ const MessageArea: React.FC<MessageAreaProps> = ({ onSendMsg }) => {
 				maxRows={3}
 				placeholder="Message ..."
 				value={content}
-				onKeyUp={handleEnterSend}
+				onKeyDown={handleEnterSend}
 				onChange={handleContentChange}
-				onFocus={() => setShowEmojis(false)}
-				onBlur={() => setShowEmojis(false)}
 				className="w-full outline-none px-3 py-2 rounded-lg resize-none"
 			/>
 			{showEmojis && (

@@ -2,13 +2,12 @@ import { useState, ChangeEvent, useEffect } from "react";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
-import Form from "../shared/FormContainer";
+import registerResolver from "../../formResolver/registerResolver";
 import AuthInput from "../shared/AuthInput";
 import Button from "../shared/Button";
-import LoadingPage from "../LoadingPage";
+import Form from "../shared/FormContainer";
 import Swal from "sweetalert2";
-import registerResolver from "../../utils/registerResolver";
+import { showErrorNotify } from "../../utils/showNotification";
 
 interface FormValues {
 	firstName: string;
@@ -67,23 +66,6 @@ const Register = () => {
 				showErrorNotify(error.response?.data.error);
 				setLoading(false);
 			});
-	}
-
-	function showErrorNotify(error: string) {
-		toast.error(error, {
-			position: "bottom-right",
-			autoClose: 5000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnHover: false,
-			draggable: true,
-			progress: undefined,
-			theme: "light",
-		});
-	}
-
-	if (loading) {
-		return <LoadingPage />;
 	}
 
 	return (

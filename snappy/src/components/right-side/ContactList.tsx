@@ -1,28 +1,47 @@
+import { useContext } from "react";
 import { NavLink } from "react-router-dom";
 import ContactCard from "./ContactCard";
-import IContact from "../../interfaces/Contact";
+import { ContactContext } from "../../context/contactsContext";
 
-interface UserContact {
-	user: IContact;
-	_id: string;
-}
+const ContactList: React.FC<{ onlineUsers: string[] }> = ({ onlineUsers }) => {
+	const { contacts } = useContext(ContactContext);
 
-interface ContactListProps {
-	contacts: UserContact[];
-}
+	// console.log(contacts);
+	const contactsArray = contacts
+		.map((contact) => {
+			if (onlineUsers.includes(contact.user._id)) {
+				contact.user.isOnline = true;
+			} else {
+				contact.user.isOnline = false;
+			}
+			return contact.user;
+		})
+		.sort((a, b) => {
+			const firstNameComparison = a.firstName.localeCompare(b.firstName);
 
-const ContactList: React.FC<ContactListProps> = ({ contacts }) => {
+			if (a.isOnline && !b.isOnline) {
+				return -1; // a should come before b
+			} else if (!a.isOnline && b.isOnline) {
+				return 1; // a should come after b
+			} else if (firstNameComparison !== 0) {
+				return firstNameComparison;
+			}
+			return 0; // no change in order
+		});
+
 	return (
 		<div className="w-full">
 			<h4 className="bg-violet-800 font-semibold pl-5 py-2">Contacts</h4>
 			<div className="max-h-[600px] overflow-y-scroll">
-				{contacts.map((contact) => (
-					<NavLink
-						key={contact.user._id}
-						to={`/${contact.user._id}`}>
-						<ContactCard contact={contact.user} />
-					</NavLink>
-				))}
+				{contactsArray.map((contact) => {
+					return (
+						<NavLink
+							key={contact._id}
+							to={`/${contact._id}`}>
+							<ContactCard contact={contact} />
+						</NavLink>
+					);
+				})}
 			</div>
 		</div>
 	);

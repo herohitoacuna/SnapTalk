@@ -1,18 +1,20 @@
 import { useState } from "react";
-
 import { NavLink, useNavigate } from "react-router-dom";
 
+// FORM
 import { useForm } from "react-hook-form";
+import resetPassResolver from "../../formResolver/resetPassResolver";
 
-import { toast } from "react-toastify";
+// nofitication
+import { showErrorNotify } from "../../utils/showNotification";
+import Swal from "sweetalert2";
+
+// data fetching
+import axios from "axios";
 
 import Form from "../shared/FormContainer";
 import AuthInput from "../shared/AuthInput";
 import Button from "../shared/Button";
-import axios from "axios";
-import Swal from "sweetalert2";
-import LoadingPage from "../LoadingPage";
-import resetPassResolver from "../../utils/resetPassResolver";
 
 interface FormValues {
 	email: string;
@@ -56,23 +58,6 @@ const ForgotPassword = () => {
 
 				setLoading(false);
 			});
-	}
-
-	function showErrorNotify(error: string) {
-		toast.error(error, {
-			position: "bottom-right",
-			autoClose: 5000,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnHover: false,
-			draggable: true,
-			progress: undefined,
-			theme: "light",
-		});
-	}
-
-	if (loading) {
-		return <LoadingPage />;
 	}
 
 	return (

@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import SearchInput from "./SearchInput";
 import ResultList from "./ResultList";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import IUser from "../../interfaces/User";
+import { SearchContext } from "../../context/searchContext";
 
 const LeftTop = () => {
-	const navigate = useNavigate();
+	const searchCtx = useContext(SearchContext);
+
 	const [searchInput, setSearchInput] = useState("");
 	const [results, setResults] = useState<IUser[]>([]);
-	const [eventKey, setEventKey] = useState("");
 
 	async function searchUsers() {
 		try {
@@ -30,7 +31,6 @@ const LeftTop = () => {
 	}
 
 	function handleOnKeyUp(e: React.KeyboardEvent) {
-		console.log(e.key);
 		if (e.key === "Enter") {
 			setSearchInput("");
 		}
@@ -51,13 +51,14 @@ const LeftTop = () => {
 				onSearch={handleSearchInputChange}
 				inputValue={searchInput}
 			/>
-			{searchInput && (
-				<ResultList
-					onUserClick={handleRemoveSearchInput}
-					onKeyUp={handleOnKeyUp}
-					searchResults={results}
-				/>
-			)}
+			{searchInput ||
+				(searchCtx?.focus && (
+					<ResultList
+						onUserClick={handleRemoveSearchInput}
+						onKeyUp={handleOnKeyUp}
+						searchResults={results}
+					/>
+				))}
 		</div>
 	);
 };

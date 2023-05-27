@@ -11,15 +11,14 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
+const { socketAuth } = require("./socket.io/socketAuth");
+const { onConnection, onDisconnect, sendPrivateMessage } = require("./socket.io/socketaHandlers");
+
 const app = express();
 const http = require("http");
 const server = http.createServer(app);
-
 const { Server } = require("socket.io");
-const io = new Server(server);
-const socketIo = require("./websocket/socketIo");
-
-const PORT = process.env.PORT || 8080;
+const io = new Server(server, { cors: { origin: "*" } });
 
 mongoose
 	.connect(process.env.MONGODB_URI, {
@@ -35,6 +34,13 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+io.use(socketAuth);
+io.on("connection", async (socket) => {
+	onConnection(socket, io);
+	onDisconnect(socket, io);
+	sendPrivateMessage(socket, io);
+});
+
 app.use(compression());
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
@@ -44,7 +50,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
 
-socketIo(io);
+const PORT = process.env.PORT || 8080;
 
 server.listen(PORT, (err) => {
 	if (err) console.log(err);

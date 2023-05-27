@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
 
-function createToken({ id, email, username }) {
+function createToken({ id, email }) {
 	const payload = {
 		id: id,
 		email: email,
-		username: username,
 	};
 	const token = jwt.sign(payload, process.env.PRIVATE_KEY, { expiresIn: "48h" });
 	return token;

@@ -1,12 +1,16 @@
 const { Schema } = require("mongoose");
+const mongoose = require("mongoose");
+const User = require("./User");
 
 const messageSchema = new Schema({
 	sender: {
 		type: mongoose.Schema.Types.ObjectId,
+		ref: User,
 		required: true,
 	},
 	recipient: {
 		type: mongoose.Schema.Types.ObjectId,
+		ref: User,
 		required: true,
 	},
 	content: {
@@ -15,7 +19,7 @@ const messageSchema = new Schema({
 	},
 	timestamp: {
 		type: Date,
-		default: new Date(),
+		default: Date.now,
 	},
 	seen: {
 		type: Boolean,

@@ -25,7 +25,7 @@ const RightTop: React.FC<RightTopProps> = ({ firstName, lastName, username, avat
 				<Avatar
 					src={avatar}
 					sx={{ height: 50, width: 50 }}>
-					HA
+					{firstName.substring(0, 1).toUpperCase() + lastName.substring(0, 1).toUpperCase()}
 				</Avatar>
 				<div className="ml-2">
 					<p className="max-w-[270px] text-white font-bold text-lg truncate">{`${firstName} ${lastName}`}</p>

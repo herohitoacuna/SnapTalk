@@ -1,7 +1,7 @@
 interface IMessage {
-	id: string;
-	sender: string;
-	recipient: string;
+	_id: string;
+	sender: string | undefined;
+	recipient: string | undefined;
 	content: string;
 	timestamp: Date;
 	seen: boolean;
