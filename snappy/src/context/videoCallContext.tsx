@@ -1,5 +1,6 @@
 import { createContext, useRef, useState } from "react";
 import socket from "../socketConnection";
+import { getItem } from "../utils/localStorageItems";
 
 interface IVideoCallContext {
 	localVideoRef: React.RefObject<HTMLVideoElement>;
@@ -8,6 +9,31 @@ interface IVideoCallContext {
 	answerCall: (contactId: string) => void;
 	endCall: () => void;
 }
+
+interface IConstraints {
+	video: boolean;
+	audio: boolean;
+}
+
+
+interface IMakeCallData{
+	callerId: string;
+	contactId: string;
+	offer: any;
+}
+
+interface IICEcandidate {
+	callerId: string;
+	contactId: string;
+	candidate: any;
+}
+
+interface IAnswerCallData {
+	callerId: string;
+	contactId: string;
+	answer: any;
+}
+
 
 const initialState: IVideoCallContext = {
 	localVideoRef: useRef<HTMLVideoElement>(null),
@@ -24,7 +50,7 @@ export const VideoCallProvider = ({ children }: { children: React.ReactNode }) =
 	const remoteVideoRef = useRef<HTMLVideoElement>(null);
 	let peerConnection: RTCPeerConnection | null = null;
 
-	const [constraint, setConstraint] = useState<{ video: boolean; audio: boolean }>({ video: true, audio: true });
+	const [constraint, setConstraint] = useState<IConstraints>({ video: true, audio: true });
 
 	async function makeVideoCall(contactId: string) {
 		try {
@@ -34,13 +60,39 @@ export const VideoCallProvider = ({ children }: { children: React.ReactNode }) =
 			}
 
 			peerConnection = new RTCPeerConnection();
+			// send ICE candidate to contact
 			peerConnection.onicecandidate = ({ candidate }) => {
-				socket.emit("iceCandidate", contactId, candidate);
+				const candidateData: IICEcandidate = {
+					callerId: getItem("id"),
+					contactId: contactId,
+					candidate: candidate
+				}
+				socket.emit("iceCandidate", candidateData);
 			};
 
+			// receive ICE candidate to contact
+			socket.on("iceCandidate", (data: IICEcandidate) => {
+				peerConnection?.addIceCandidate(data)
+			})		
+
+			//create offer and set is as localDescription
 			const offerSDP = await peerConnection.createOffer();
 			await peerConnection.setLocalDescription(offerSDP);
-			socket.emit("offer", contactId, offerSDP);
+
+			// send the localDescription as SDP
+			const callData: IMakeCallData = {
+				callerId: getItem("id"),
+				contactId: contactId,
+				offer: offerSDP
+			}
+			socket.emit("offer", callData);
+
+	
+
+			// receive the remoteDescription as SDP
+			socket.on("answer",  async (data: IAnswerCallData) => {
+				await peerConnection?.setRemoteDescription(data.answer)
+			})
 		} catch (error) {
 			console.error("Error making video call:", error);
 		}
