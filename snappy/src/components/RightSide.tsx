@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { ContactContext } from "../context/contactsContext";
 import { removeItem } from "../utils/localStorageItems";
 
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -30,13 +29,12 @@ const RightSide: React.FC<RightSideProps> = ({
 	function handleLogout() {
 		removeItem("token");
 		removeItem("id");
-		// delete socket.auth?.token;
 		socket.disconnect();
 		navigate("/auth");
 	}
 
 	return (
-		<div className="w-full h-full lg:w-[20vw] text-white bg-container relative">
+		<div className="w-full h-full lg:w-[20vw] flex flex-col text-white bg-container">
 			<RightTop
 				onClick={() => onOpenPersonInfo(true)}
 				firstName={firstName}
@@ -47,7 +45,7 @@ const RightSide: React.FC<RightSideProps> = ({
 
 			<ContactList onlineUsers={onlineUsers} />
 
-			<footer className="w-full flex flex-col items-center absolute bottom-0 ">
+			<footer className="w-full flex flex-col items-center bottom-0 ">
 				<button
 					onClick={handleLogout}
 					className="mb-12 text-xl font-medium hover:opacity-50 rounded-md border-white">

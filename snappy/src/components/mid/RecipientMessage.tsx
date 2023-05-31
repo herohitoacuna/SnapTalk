@@ -10,7 +10,7 @@ const RecipientMessage: React.FC<{ content: string; timestamp: Date; seen: boole
 	return (
 		<div className="flex justify-start">
 			<div className="inline-block py-2 px-5 rounded-md bg-violet-200">
-				<p className="whitespace-pre-line text-lg text-left">{content}</p>
+				<p className="whitespace-pre-line text-base text-left">{content}</p>
 
 				<div className="flex gap-1">
 					<p className="text-xs text-slate-700">

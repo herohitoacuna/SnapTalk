@@ -43,11 +43,13 @@ const Result: React.FC<ResultProps> = ({
 		<div
 			onClick={onUserClick}
 			onKeyDown={handleOnKeyUp}
-			className="flex gap-3 p-2 items-center justify-between border-b-[1px]  hover-container">
+			className="flex gap-3 p-1 px-4 items-center justify-between border-b-[1px]  hover-container">
 			<div className="flex items-center gap-3">
-				<Avatar src={avatar}></Avatar>
+				<Avatar
+					sx={{ width: 40, height: 40 }}
+					src={avatar}></Avatar>
 				<span>
-					<h4 className="font-bold text-lg leading-tight">{`${firstName} ${lastName}`}</h4>
+					<h4 className="font-bold text-base leading-tight">{`${firstName} ${lastName}`}</h4>
 					<span className="text-sm">@{username}</span>
 				</span>
 			</div>

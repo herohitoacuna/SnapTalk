@@ -10,6 +10,7 @@ import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import { MessagesProvider } from "./context/messagesContext";
 import { SearchProvider } from "./context/searchContext";
+import { VideoCallProvider } from "./context/videoCallContext";
 
 const router = createBrowserRouter([
 	{
@@ -48,13 +49,15 @@ const router = createBrowserRouter([
 
 const App = () => {
 	return (
-		<SearchProvider>
-			<MessagesProvider>
-				<ContactProvider>
-					<RouterProvider router={router} />
-				</ContactProvider>
-			</MessagesProvider>
-		</SearchProvider>
+		<VideoCallProvider>
+			<SearchProvider>
+				<MessagesProvider>
+					<ContactProvider>
+						<RouterProvider router={router} />
+					</ContactProvider>
+				</MessagesProvider>
+			</SearchProvider>
+		</VideoCallProvider>
 	);
 };
 

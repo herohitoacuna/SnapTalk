@@ -1,15 +1,12 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import axios from "axios";
-
 import IUser from "../interfaces/User";
 import ContactLandingView from "./mid/ContactLandingView";
 import MessagesContainer from "./mid/MessagesContainer";
 import { MessagesContext } from "../context/messagesContext";
 import socket from "../socketConnection";
-import { useAxios } from "../hooks/useAxios";
-import { getItem } from "../utils/localStorageItems";
+import { getContactInfo } from "../fetchingApi/users";
+import { VideoCallContext } from "../context/videoCallContext";
 
 const Mid = () => {
 	const { contactId } = useParams();
@@ -22,24 +19,34 @@ const Mid = () => {
 		username: "",
 		email: "",
 		avatar: "",
-		socketId: "",
 	});
-	const contactData = useAxios({ method: "GET", endpoint: `/api/users/user/${contactId}` });
-	useEffect(() => {
-		(function fetchContactDetails() {
-			contactData.then(({ resData }) => setContactDetails(resData));
-		})();
 
-		if (contactId) {
-			fetchMessages(contactId);
-			receiveMessage(contactId);
-			updateMessageStatus(contactId);
+	const fetchContactDetails = useCallback(async () => {
+		try {
+			const { responseData } = await getContactInfo(contactId as string);
+			setContactDetails(responseData);
+		} catch (error) {
+			console.log(error);
 		}
+	}, [contactId]);
 
-		return () => {
+	function handleOpenMsgContainer() {
+		setOpenMsgContainer(true);
+	}
+
+	useEffect(() => {
+		if (!contactId) return;
+		fetchContactDetails();
+		fetchMessages(contactId);
+		receiveMessage(contactId);
+		updateMessageStatus(contactId);
+
+		const cleanup = () => {
 			socket.off("receive-private-msg");
 		};
-	}, [contactId]);
+
+		return cleanup;
+	}, [fetchContactDetails, fetchMessages, receiveMessage, updateMessageStatus]);
 
 	useEffect(() => {
 		if (messages.length !== 0) {
@@ -48,10 +55,6 @@ const Mid = () => {
 			setOpenMsgContainer(false);
 		}
 	}, [messages]);
-
-	function handleOpenMsgContainer() {
-		setOpenMsgContainer(true);
-	}
 
 	return (
 		<div className={`flex flex-col w-full md:w-[50vw] h-full bg-white`}>

@@ -1,9 +1,8 @@
-import { createContext, useEffect, useId, useState } from "react";
+import { createContext, useCallback, useId, useState } from "react";
 import IMessage from "../interfaces/Message";
 import { getItem } from "../utils/localStorageItems";
-import axios from "axios";
 import socket from "../socketConnection";
-import { useAxios } from "../hooks/useAxios";
+import { getMessages, updateMessagesStatus } from "../fetchingApi/messages";
 
 interface ISendMessage {
 	_id: string;
@@ -34,56 +33,55 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
 	const messageId = useId();
 	const [messages, setMessages] = useState<(IMessage | ISendMessage)[]>([]);
 
-	async function fetchMessages(contactId: string) {
-		try {
-			const { resData } = await useAxios({
-				method: "GET",
-				endpoint: "/api/messages",
-				params: contactId,
-				authToken: getItem("token"),
+	const fetchMessages = useCallback(
+		async (contactId: string) => {
+			try {
+				const { responseData } = await getMessages(contactId);
+				setMessages(responseData);
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		[setMessages],
+	);
+
+	const updateMessageStatus = useCallback(
+		async (contactId: string) => {
+			try {
+				if (!contactId) return;
+				const { responseData } = await updateMessagesStatus(contactId);
+				fetchMessages(contactId);
+			} catch (error) {
+				console.error(error);
+			}
+		},
+		[fetchMessages],
+	);
+
+	const sendMessage = useCallback(
+		async (content: string, contactId: string) => {
+			const newMessage: ISendMessage = {
+				_id: messageId,
+				sender: getItem("id"),
+				recipient: contactId,
+				content: content,
+				timestamp: new Date(),
+			};
+			socket.emit("send-private-msg", newMessage);
+			setMessages((prev) => [...prev, newMessage]);
+		},
+		[setMessages],
+	);
+
+	const receiveMessage = useCallback(
+		(contactId: string) => {
+			socket.on("receive-private-msg", (newMessage) => {
+				if (newMessage) fetchMessages(contactId);
+				if (contactId) updateMessageStatus(contactId);
 			});
-			setMessages(resData);
-		} catch (error) {
-			console.error(error);
-		}
-	}
-
-	function receiveMessage(contactId: string) {
-		socket.on("receive-private-msg", (newMessage) => {
-			if (newMessage) {
-				fetchMessages(contactId);
-			}
-		});
-	}
-
-	async function sendMessage(content: string, contactId: string) {
-		const newMessage: ISendMessage = {
-			_id: messageId,
-			sender: getItem("id"),
-			recipient: contactId,
-			content: content,
-			timestamp: new Date(),
-		};
-		socket.emit("send-private-msg", newMessage);
-		// updateMessageStatus(contactId);
-		setMessages((prev) => [...prev, newMessage]);
-	}
-
-	async function updateMessageStatus(contactId: string) {
-		try {
-			if (contactId) {
-				await useAxios({
-					method: "PUT",
-					endpoint: "/api/messages",
-					params: contactId,
-					authToken: getItem("token"),
-				});
-				fetchMessages(contactId);
-			}
-		} catch (error) {
-			console.error(error);
-		}
-	}
+		},
+		[fetchMessages, updateMessageStatus],
+	);
 
 	const contextValue = {
 		messages,

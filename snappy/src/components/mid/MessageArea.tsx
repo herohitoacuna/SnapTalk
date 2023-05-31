@@ -36,7 +36,7 @@ const MessageArea = () => {
 	}
 
 	return (
-		<div className="flex items-center justify-center p-5 border-r-[1px] border-violet-700 bg-container relative">
+		<div className="flex items-center justify-center p-5 border-r-[1px] border-violet-700 bg-container">
 			<SentimentSatisfiedAltIcon
 				className="hover:opacity-70 cursor-pointer"
 				onClick={(e) => setShowEmojis(!showEmojis)}
@@ -50,7 +50,7 @@ const MessageArea = () => {
 				value={content}
 				onKeyDown={handleEnterSend}
 				onChange={handleContentChange}
-				className="w-full outline-none px-3 py-2 rounded-lg resize-none"
+				className="w-full text-sm outline-none px-2 py-2 rounded-lg resize-none"
 			/>
 			{showEmojis && (
 				<div className="absolute bottom-[5.5rem] left-[1.2rem]">

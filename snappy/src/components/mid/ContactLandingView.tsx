@@ -1,10 +1,10 @@
-import { Emoji } from "emoji-picker-react";
-import { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import IMessage from "../../interfaces/Message";
-import axios from "axios";
 import IUser from "../../interfaces/User";
+import { Emoji } from "emoji-picker-react";
+import { useContext } from "react";
+import { useParams } from "react-router-dom";
 import { MessagesContext } from "../../context/messagesContext";
+import { defaultChars } from "../../utils/avatarDefaultChars";
+import { Avatar } from "@mui/material";
 
 interface ContactLandingView {
 	contactDetails: IUser;
@@ -14,36 +14,22 @@ interface ContactLandingView {
 const ContactLandingView: React.FC<ContactLandingView> = ({ contactDetails, onOpenMsgContainer }) => {
 	const { contactId } = useParams();
 	const { sendMessage: onSendMessage } = useContext(MessagesContext);
+	const { avatar, firstName, lastName, username } = contactDetails;
 
 	function handleSendHi() {
-		if (contactId) {
-			onSendMessage("Hi 👋", contactId);
-		}
+		if (contactId) onSendMessage("Hi 👋", contactId);
 	}
 
 	return (
 		<div className="h-full w-full flex flex-col  gap-4 items-center justify-center text-white bg-indigo-900">
-			<div
-				className={`flex items-center justify-center h-[200px] w-[200px]
-		 			text-7xl  rounded-full
-		 			bg-blue-500 bg-cover bg-no-repeat]
-		 			`}>
-				{contactDetails.avatar ? (
-					<img
-						className="h-[200px] w-[200px] rounded-full object-cover "
-						src={contactDetails?.avatar}
-						alt="Images"
-					/>
-				) : (
-					`${contactDetails?.firstName.substring(0, 1).toUpperCase()}${contactDetails?.lastName
-						.substring(0, 1)
-						.toUpperCase()}`
-				)}
-			</div>
-
-			<h4 className="text-4xl">{`${contactDetails?.firstName} ${contactDetails?.lastName}`}</h4>
-
-			<h6 className="mb-52 text-xl">@{contactDetails?.username}</h6>
+			<Avatar
+				src={avatar}
+				sizes="45px"
+				sx={{ fontSize: "2rem" }}>
+				{defaultChars(firstName, lastName)}
+			</Avatar>
+			<h4 className="text-4xl">{`${firstName} ${lastName}`}</h4>
+			<h6 className="mb-52 text-xl">@{username}</h6>
 			<button
 				onClick={handleSendHi}
 				className="flex items-center gap-5  px-8 py-4

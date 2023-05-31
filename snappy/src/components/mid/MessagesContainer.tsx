@@ -1,11 +1,6 @@
-import { useEffect, useState } from "react";
 import MidTop from "./MidTop";
 import MessageArea from "./MessageArea";
 import MessageConvo from "./MessageConvo";
-import { useNavigate } from "react-router-dom";
-import IMessage from "../../interfaces/Message";
-import axios from "axios";
-import socket from "../../socketConnection";
 import IUser from "../../interfaces/User";
 
 interface MessagesContainerProps {

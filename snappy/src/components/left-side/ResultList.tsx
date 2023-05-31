@@ -13,13 +13,11 @@ interface ResultListProps {
 
 const ResultList: React.FC<ResultListProps> = ({ searchResults, onUserClick, onKeyUp }) => {
 	const { contacts } = useContext(ContactContext);
-	const searchCtx = useContext(SearchContext);
 
 	const arrayContactsId = contacts.map((contact) => contact.user._id);
 
 	return (
-		<div className="absolute top-[9vh] w-[94%] max-h-[25rem] overflow-y-auto z-20 px-5 py-2 rounded-sm bg-white shadow-md shadow-slate-400 ">
-			{searchCtx?.focus && <p className="text-center">Search Users</p>}
+		<div className="absolute top-[9vh] w-[94%] max-h-[25rem] overflow-y-auto z-20 px-3 py-2 rounded-sm bg-white shadow-md shadow-slate-400 ">
 			{searchResults.length === 0 && <p className="text-center">User not found</p>}
 			{searchResults.length !== 0 &&
 				searchResults

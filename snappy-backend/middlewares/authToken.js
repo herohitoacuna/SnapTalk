@@ -5,17 +5,20 @@ function createToken({ id, email }) {
 		id: id,
 		email: email,
 	};
-	const token = jwt.sign(payload, process.env.PRIVATE_KEY, { expiresIn: "48h" });
+	const token = jwt.sign(payload, process.env.PRIVATE_KEY, {
+		expiresIn: "48h",
+	});
 	return token;
 }
 
 function verifyToken(req, res, next) {
-	const { authorization } = req.headers;
-	if (!authorization) {
-		return res.status(401).json({ error: "Authentication failed." });
-	}
-	const token = authorization.replaceAll("Bearer ", "");
 	try {
+		const { authorization } = req.headers;
+		if (!authorization) {
+			return res.status(401).json({ error: "Authentication failed." });
+		}
+
+		const token = authorization.replace(/Bearer /g, "");
 		const decoded = jwt.verify(token, process.env.PRIVATE_KEY);
 		req.user = decoded;
 		next();

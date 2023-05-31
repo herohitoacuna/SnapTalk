@@ -15,6 +15,7 @@ import axios from "axios";
 import Form from "../shared/FormContainer";
 import AuthInput from "../shared/AuthInput";
 import Button from "../shared/Button";
+import { postResetPass } from "../../fetchingApi/athentication";
 
 interface FormValues {
 	email: string;
@@ -41,23 +42,21 @@ const ForgotPassword = () => {
 		},
 	});
 
-	function onSubmit(data: FormValues) {
-		setLoading(true);
-		axios
-			.put(`${port}/api/auth/reset-password`, data)
-			.then(({ data }) => {
-				reset();
-				Swal.fire("Success", `Successfully changed password`, "success");
-				navigate("/auth");
-			})
-			.catch((error) => {
-				console.log(error.response.data?.error);
+	async function onSubmit(data: FormValues) {
+		try {
+			setLoading(true);
+			const { responseData } = await postResetPass(data);
+			reset();
+			Swal.fire("Success", `Successfully changed password`, "success");
+			navigate("/auth");
+		} catch (error: any) {
+			console.log(error.response.data?.error);
 
-				setErrorStyle("border-[2px] border-red-500");
-				showErrorNotify(error.response.data?.error);
+			setErrorStyle("border-[2px] border-red-500");
+			showErrorNotify(error.response.data?.error);
 
-				setLoading(false);
-			});
+			setLoading(false);
+		}
 	}
 
 	return (

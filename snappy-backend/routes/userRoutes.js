@@ -22,9 +22,9 @@ const {
 } = require("../controllers/userController");
 const { verifyToken } = require("../middlewares/authToken");
 
-router.get("/user", getUser);
-router.get("/user/search", searchUser);
+router.get("/user", verifyToken, getUser);
 router.patch("/user", verifyToken, upload.single("avatar"), patchUpdateProfile);
+router.get("/user/search", searchUser);
 router.get("/user/contacts", verifyToken, getContacts);
 router.patch("/user/contacts/:contactId", verifyToken, patchAddToContacts);
 router.get("/user/:contactId", getContactInfo);

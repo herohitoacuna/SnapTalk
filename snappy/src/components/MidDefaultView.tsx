@@ -12,7 +12,6 @@ const MidDefaultView = () => {
 			searchCtx.ref.current.focus();
 		}
 	}
-	console.log(searchCtx?.focus);
 
 	return (
 		<div

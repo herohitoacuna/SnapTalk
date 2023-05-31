@@ -1,16 +1,17 @@
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
-import loginResolver from "../../formResolver/loginResolver";
 import { NavLink, useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { showErrorNotify } from "../../utils/showNotification";
+import Swal from "sweetalert2";
 
-import Form from "../shared/FormContainer";
 import AuthInput from "../shared/AuthInput";
 import Button from "../shared/Button";
-import Swal from "sweetalert2";
+import Form from "../shared/FormContainer";
 import { setItem } from "../../utils/localStorageItems";
+import loginResolver from "../../formResolver/loginResolver";
+import { postLogin } from "../../fetchingApi/athentication";
 
 type FormValues = {
 	email: string;
@@ -37,24 +38,22 @@ const Login = () => {
 		},
 	});
 
-	function onSubmit(data: any) {
-		setLoading(true);
-		axios
-			.post(`${port}/api/auth/login`, data)
-			.then(({ data }) => {
-				setItem("id", data?._id);
-				setItem("token", data?.token);
-				reset();
-				Swal.fire("Login", "Welcome back to SnapTalk", "success");
-				setLoading(false);
-				navigate("/");
-			})
-			.catch((error) => {
-				console.log(error.response.data?.error);
-				setErrorStyle("border-[2px] border-red-500");
-				showErrorNotify(error.response.data?.error);
-				setLoading(false);
-			});
+	async function onSubmit(data: any) {
+		try {
+			setLoading(true);
+			const { responseData } = await postLogin(data);
+			setItem("id", responseData._id);
+			setItem("token", responseData.token);
+			reset();
+			Swal.fire("Login", "Welcome back to SnapTalk", "success");
+			setLoading(false);
+			navigate("/");
+		} catch (error: any) {
+			console.log(error.response.data?.error);
+			setErrorStyle("border-[2px] border-red-500");
+			showErrorNotify(error.response.data?.error);
+			setLoading(false);
+		}
 	}
 
 	return (

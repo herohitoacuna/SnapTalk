@@ -7,6 +7,8 @@ import ProfileInput from "../shared/ProfileInput";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import updateProfileResolver from "../../formResolver/updateProfileResolver";
+import { getItem } from "../../utils/localStorageItems";
+import { putUpdateProfile } from "../../fetchingApi/users";
 
 interface ProfileInfoProps {
 	firstName: string;
@@ -15,6 +17,7 @@ interface ProfileInfoProps {
 	username: string;
 	email: string;
 	onOpenPersonInfo: (state: boolean) => void;
+	fetchUserdetails: () => void;
 }
 
 type FormValues = {
@@ -32,6 +35,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	username,
 	email,
 	onOpenPersonInfo,
+	fetchUserdetails,
 }) => {
 	const [disabled, setDisabled] = useState(true);
 	const [loading, setLoading] = useState(false);
@@ -82,9 +86,15 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 		}
 	}
 
+	function handleCancelClick(e: React.MouseEvent<HTMLButtonElement>) {
+		e.preventDefault();
+		setDisabled(true);
+		setImageUrl(avatar);
+		reset();
+	}
+
 	async function onSubmit(data: FormValues) {
 		const formData: Partial<FormValues> = {};
-
 		// push all the fieldName that are modified in the form
 		for (const dataProperty in data) {
 			const fieldName = dataProperty as keyof FormValues;
@@ -93,11 +103,9 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 				formData[fieldName] = (data as any)[fieldName];
 			}
 		}
-
 		if (imageObj) {
 			formData.avatar = imageObj;
 		}
-
 		// dont run the http request if there is no changes in the formData
 		if (Object.keys(formData).length === 0) {
 			setDisabled(true);
@@ -108,15 +116,10 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 			setLoading(true);
 			setButtonDisabled(true);
 
-			const res = await axios.patch(`${import.meta.env.VITE_PORT}/api/users/user`, formData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-					Authorization: `Bearer ${localStorage.getItem("token")}`,
-				},
-			});
-			const resData = res.data;
+			const { responseData, status } = await putUpdateProfile(formData);
 			// setImageUrl(resData.avatar);
-			if (res.status === 200) {
+			fetchUserdetails();
+			if (status === 200) {
 				showSuccessNotify("Successfully updated.");
 			} else {
 				showErrorNotify("Sorry there is an error.");
@@ -128,13 +131,6 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 		setButtonDisabled(false);
 		setLoading(false);
 		setDisabled(true);
-	}
-
-	function handleCancelClick(e: React.MouseEvent<HTMLButtonElement>) {
-		e.preventDefault();
-		setDisabled(true);
-		setImageUrl(avatar);
-		reset();
 	}
 
 	return (

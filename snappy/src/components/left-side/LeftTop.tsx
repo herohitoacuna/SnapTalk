@@ -1,25 +1,18 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import SearchInput from "./SearchInput";
 import ResultList from "./ResultList";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import IUser from "../../interfaces/User";
-import { SearchContext } from "../../context/searchContext";
+import { queryUsers } from "../../fetchingApi/users";
 
 const LeftTop = () => {
-	const searchCtx = useContext(SearchContext);
-
 	const [searchInput, setSearchInput] = useState("");
 	const [results, setResults] = useState<IUser[]>([]);
 
 	async function searchUsers() {
 		try {
-			const usersResult = await axios.get(
-				`${import.meta.env.VITE_PORT}/api/users/user/search?search=${searchInput}`,
-			);
-			const usersData = usersResult.data;
-			setResults(usersData);
+			const { responseData } = await queryUsers(searchInput);
+			setResults(responseData);
 		} catch (error) {
 			console.log(error);
 		}
@@ -41,7 +34,7 @@ const LeftTop = () => {
 	}
 
 	return (
-		<div className="w-full flex items-center py-6 px-4 border-r-[1px] border-violet-800 bg-container relative">
+		<div className="w-full flex items-center py-4 px-3 border-r-[1px] border-violet-800 bg-container relative">
 			<button
 				onClick={() => {}}
 				className="md:hidden hover:opacity-80 mr-3 cursor-pointer">
@@ -51,14 +44,13 @@ const LeftTop = () => {
 				onSearch={handleSearchInputChange}
 				inputValue={searchInput}
 			/>
-			{searchInput ||
-				(searchCtx?.focus && (
-					<ResultList
-						onUserClick={handleRemoveSearchInput}
-						onKeyUp={handleOnKeyUp}
-						searchResults={results}
-					/>
-				))}
+			{searchInput && (
+				<ResultList
+					onUserClick={handleRemoveSearchInput}
+					onKeyUp={handleOnKeyUp}
+					searchResults={results}
+				/>
+			)}
 		</div>
 	);
 };

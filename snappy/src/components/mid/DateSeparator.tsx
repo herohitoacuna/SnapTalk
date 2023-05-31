@@ -1,11 +1,6 @@
-const DateSeparator = ({ messageTime, date }: { messageTime?: Date; date?: string }) => {
-	// TODAY OR YESTERDAY
-	// const dateNow = new Date();
-	// const sameMonth = dateNow.getMonth() === messageTime?.getMonth();
-	// const sameYear = dateNow.getFullYear() === messageTime?.getFullYear();
-
+const DateSeparator = ({ date }: { date: string }) => {
 	return (
-		<div className="text-[13px] text-slate-400 flex justify-center items-center mb-3 ">
+		<div className="text-[12px] text-slate-400 flex justify-center items-center mb-3 ">
 			<HorizontalLine />
 			{date}
 			<HorizontalLine />

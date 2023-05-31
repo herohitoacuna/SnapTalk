@@ -24,7 +24,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ onSearch, inputValue }) => {
 					value={inputValue}
 					type="text"
 					placeholder="Search"
-					className="w-[95%] text-lg pl-4 outline-none"
+					className="w-[95%] text-base pl-4 outline-none"
 				/>
 				<SearchIcon sx={{ fontSize: 30, color: "rgba(0,0,0,0.6)", cursor: "text" }} />
 			</div>

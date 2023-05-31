@@ -5,7 +5,6 @@ interface IUser {
 	username: string;
 	avatar: string;
 	email: string;
-	socketId: string;
 }
 
 export default IUser;

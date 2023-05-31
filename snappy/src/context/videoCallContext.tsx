@@ -1,13 +1,15 @@
-import { createContext, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import socket from "../socketConnection";
 import { getItem } from "../utils/localStorageItems";
 
 interface IVideoCallContext {
-	localVideoRef: React.RefObject<HTMLVideoElement>;
-	remoteVideoRef: React.RefObject<HTMLVideoElement>;
+	localVideoRef: React.RefObject<HTMLVideoElement> | null;
+	remoteVideoRef: React.RefObject<HTMLVideoElement> | null;
+	openCall: boolean;
+	onOpenCall: () => void;
 	makeVideoCall: (contactId: string) => void;
-	answerCall: (contactId: string) => void;
-	endCall: () => void;
+	// answerCall: (contactId: string) => void;
+	// endCall: () => void;
 }
 
 interface IConstraints {
@@ -15,150 +17,143 @@ interface IConstraints {
 	audio: boolean;
 }
 
-
-interface IMakeCallData{
+interface callData {
 	callerId: string;
 	contactId: string;
-	offer: any;
 }
 
-interface IICEcandidate {
-	callerId: string;
-	contactId: string;
+interface ICandidate extends callData {
 	candidate: any;
 }
 
-interface IAnswerCallData {
-	callerId: string;
-	contactId: string;
+interface IOffer extends callData {
+	offer: any;
+}
+
+interface IAnswer extends callData {
 	answer: any;
 }
 
-
 const initialState: IVideoCallContext = {
-	localVideoRef: useRef<HTMLVideoElement>(null),
-	remoteVideoRef: useRef<HTMLVideoElement>(null),
+	localVideoRef: null,
+	remoteVideoRef: null,
+	openCall: false,
+	onOpenCall: () => {},
 	makeVideoCall: (contactId: string) => {},
-	answerCall: (contactId: string) => {},
-	endCall: () => {},
+	// answerCall: (contactId: string) => {},
+	// endCall: () => {},
 };
 
 export const VideoCallContext = createContext<IVideoCallContext>(initialState);
 
 export const VideoCallProvider = ({ children }: { children: React.ReactNode }) => {
+	const [openCall, setOpenCall] = useState(false);
+	const [constraints, setConstraints] = useState<IConstraints>({ video: true, audio: true });
 	const localVideoRef = useRef<HTMLVideoElement>(null);
 	const remoteVideoRef = useRef<HTMLVideoElement>(null);
-	let peerConnection: RTCPeerConnection | null = null;
+	let peerConnection: RTCPeerConnection | null;
 
-	const [constraint, setConstraint] = useState<IConstraints>({ video: true, audio: true });
+	const handleOpenCall = () => {
+		setOpenCall(true);
+	};
 
-	async function makeVideoCall(contactId: string) {
-		try {
-			const localStream = await navigator.mediaDevices.getUserMedia(constraint);
-			if (localVideoRef.current) {
-				localVideoRef.current.srcObject = localStream;
-			}
+	// call when use click the audio call only
+	const audioCallConstraints = () => {
+		setConstraints({ video: false, audio: true });
+	};
+	// receive candidate and addCandidate(candidate)
 
-			peerConnection = new RTCPeerConnection();
-			// send ICE candidate to contact
-			peerConnection.onicecandidate = ({ candidate }) => {
-				const candidateData: IICEcandidate = {
-					callerId: getItem("id"),
-					contactId: contactId,
-					candidate: candidate
-				}
-				socket.emit("iceCandidate", candidateData);
-			};
+	// add the streams to the peerConnection so that remotePeer can receive this
 
-			// receive ICE candidate to contact
-			socket.on("iceCandidate", (data: IICEcandidate) => {
-				peerConnection?.addIceCandidate(data)
-			})		
+	// add the stream to the video element for the local video user
+	// create offer
+	// set as localDescription
+	// send to contact
 
-			//create offer and set is as localDescription
-			const offerSDP = await peerConnection.createOffer();
-			await peerConnection.setLocalDescription(offerSDP);
+	// receive an answer
+	// set as remoteDescription
 
-			// send the localDescription as SDP
-			const callData: IMakeCallData = {
+	//receive an video-audio stream from remote peer
+	// add the remote stream to the remote video user
+
+	const makeVideoCall = async (contactId: string) => {
+		console.log("videoCall");
+		setOpenCall(true);
+		const configuration = {
+			// iceServers: [{ "urls": "stun.12connect.com:3478" }],
+		};
+
+		const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+		if (!localVideoRef.current) return;
+		localVideoRef.current.srcObject = localStream;
+
+		peerConnection = new RTCPeerConnection(configuration);
+
+		localStream.getTracks().forEach((track) => {
+			console.log(track);
+			if (!peerConnection) return;
+			peerConnection.addTrack(track, localStream);
+		});
+		peerConnection.addEventListener("icecandidate", (e) => {
+			const candidateData: ICandidate = {
 				callerId: getItem("id"),
 				contactId: contactId,
-				offer: offerSDP
-			}
-			socket.emit("offer", callData);
-
-	
-
-			// receive the remoteDescription as SDP
-			socket.on("answer",  async (data: IAnswerCallData) => {
-				await peerConnection?.setRemoteDescription(data.answer)
-			})
-		} catch (error) {
-			console.error("Error making video call:", error);
-		}
-	}
-
-	function answerCall(contactId: string) {
-		try {
-			peerConnection = new RTCPeerConnection();
-			peerConnection.onicecandidate = ({ candidate }) => {
-				socket.emit("iceCandidate", contactId, candidate);
+				candidate: e.candidate,
 			};
 
-			// Handle incoming offer
-			socket.on("offer", async (offerSDP) => {
-				await peerConnection?.setRemoteDescription(new RTCSessionDescription(offerSDP));
+			socket.emit("localCandidate", candidateData);
+		});
 
-				const answerSDP = await peerConnection?.createAnswer();
-				await peerConnection?.setLocalDescription(answerSDP);
+		const offer = await peerConnection.createOffer();
+		console.log(offer);
+		peerConnection.setLocalDescription(offer);
+		const callData: IOffer = {
+			callerId: getItem("id"),
+			contactId: contactId,
+			offer: offer,
+		};
+		socket.emit("offer", callData);
+		peerConnection.addEventListener("track", (event) => {
+			console.log(event);
+			const [remoteStream] = event.streams;
+			if (!remoteVideoRef.current) return;
+			remoteVideoRef.current.srcObject = remoteStream;
+		});
+	};
 
-				socket.emit("answer", contactId, answerSDP);
-			});
+	useEffect(() => {
+		socket.on("remoteCandidate", (receiveCandidateData: ICandidate) => {
+			console.log(receiveCandidateData);
+			peerConnection?.addIceCandidate(receiveCandidateData.candidate);
+		});
 
-			// Handle incoming answer
-			socket.on("answer", async (answerSDP) => {
-				await peerConnection?.setRemoteDescription(new RTCSessionDescription(answerSDP));
-			});
+		socket.on("offer", (receiveOfferData: IOffer) => {
+			console.log(receiveOfferData.offer);
+			peerConnection?.setRemoteDescription(receiveOfferData.offer);
+		});
 
-			// Handle incoming ICE candidates
-			socket.on("iceCandidate", (candidate) => {
-				peerConnection?.addIceCandidate(new RTCIceCandidate(candidate));
-			});
+		socket.on("answer", (receiveAnswerData: IAnswer) => {
+			console.log(receiveAnswerData);
+			peerConnection?.setLocalDescription(receiveAnswerData.answer);
+		});
 
-			// Start listening for media stream and update remote video element
-			peerConnection.ontrack = (event) => {
-				const remoteStream = event.streams[0];
-				if (remoteVideoRef.current) {
-					remoteVideoRef.current.srcObject = remoteStream;
-				}
-			};
-		} catch (error) {
-			console.error("Error answering call:", error);
-		}
-	}
+		const cleanup = () => {
+			socket.off("remoteCandidate");
+			socket.off("offer");
+			socket.off("answer");
+		};
 
-	function endCall() {
-		if (localVideoRef.current) {
-			localVideoRef.current.srcObject = null;
-		}
-
-		if (remoteVideoRef.current) {
-			remoteVideoRef.current.srcObject = null;
-		}
-
-		if (peerConnection) {
-			// Close the RTCPeerConnection
-			peerConnection.close();
-			peerConnection = null;
-		}
-	}
+		return cleanup;
+	}, []);
 
 	const contextValue = {
 		localVideoRef,
 		remoteVideoRef,
+		openCall,
+		onOpenCall: handleOpenCall,
 		makeVideoCall,
-		answerCall,
-		endCall,
+		// answerCall,
+		// endCall,
 	};
 
 	return <VideoCallContext.Provider value={contextValue}>{children}</VideoCallContext.Provider>;

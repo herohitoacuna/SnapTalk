@@ -33,7 +33,6 @@ const userSchema = new Schema({
 		type: String,
 		required: [true, "Password is required."],
 	},
-	socketId: { type: String, default: "" },
 	contacts: [
 		{
 			user: {

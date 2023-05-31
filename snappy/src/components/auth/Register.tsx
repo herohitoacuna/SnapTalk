@@ -8,6 +8,7 @@ import Button from "../shared/Button";
 import Form from "../shared/FormContainer";
 import Swal from "sweetalert2";
 import { showErrorNotify } from "../../utils/showNotification";
+import { postRegister } from "../../fetchingApi/athentication";
 
 interface FormValues {
 	firstName: string;
@@ -42,30 +43,28 @@ const Register = () => {
 		},
 	});
 
-	function onSubmit(data: FormValues) {
-		const { firstName, lastName, username, email, password } = data;
+	async function onSubmit(data: FormValues) {
+		try {
+			const { firstName, lastName, username, email, password } = data;
 
-		setLoading(true);
-		axios
-			.post(`${port}/api/auth/register`, {
+			const registerData = {
 				firstName,
 				lastName,
 				username,
 				email,
 				password,
-			})
-			.then((res) => {
-				console.log(res.data);
-				reset();
-				Swal.fire("Success", "Succesfully created an account!", "success");
-				navigate("/auth");
-			})
-			.catch((error) => {
-				console.log(error.response?.data);
-				setErrorStyle("border-[2px] border-red-500");
-				showErrorNotify(error.response?.data.error);
-				setLoading(false);
-			});
+			};
+			setLoading(true);
+			const { responseData } = await postRegister(registerData);
+			reset();
+			Swal.fire("Success", "Succesfully created an account!", "success");
+			navigate("/auth");
+		} catch (error: any) {
+			console.log(error.response?.data);
+			setErrorStyle("border-[2px] border-red-500");
+			showErrorNotify(error.response?.data.error);
+			setLoading(false);
+		}
 	}
 
 	return (

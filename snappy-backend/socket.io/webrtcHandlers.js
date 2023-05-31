@@ -1,18 +1,21 @@
 function iceCandidate(socket, io) {
-	socket.on("iceCandidate", (contactId, candidate) => {
-		io.to(contactId).emit("iceCandidate", candidate);
+	socket.on("localCandidate", (callData) => {
+		console.log(callData);
+		io.to(callData.contactId).emit("remoteCandidate", callData);
 	});
 }
 
 function offer(socket, io) {
-	socket.on("offer", (contactId, offerSDP) => {
-		io.to(contactId).emit("offer", offerSDP);
+	socket.on("offer", (callData) => {
+		// console.log(callData);
+		// io.to(contactId).emit("offer", offerSDP);
 	});
 }
 
 function answer(socket, io) {
-	socket.on("answer", (contactId, answerSDP) => {
-		io.to(contactId).emit("answer", answerSDP);
+	socket.on("answer", (callData) => {
+		// console.log(callData);
+		// io.to(contactId).emit("answer", answerSDP);
 	});
 }
 

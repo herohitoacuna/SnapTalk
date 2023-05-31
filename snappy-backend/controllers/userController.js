@@ -5,8 +5,7 @@ const cloudinary = require("cloudinary").v2;
 
 async function getUser(req, res) {
 	try {
-		const authToken = req.headers.authorization;
-		const { id } = decodeToken(authToken);
+		const { id } = req.user; // middleware verifyToken
 		const user = await User.findById(id, { createdAt: 0, __v: 0, password: 0, contacts: 0 });
 
 		return res.status(200).json(user);

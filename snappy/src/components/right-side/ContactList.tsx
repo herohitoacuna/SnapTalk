@@ -30,7 +30,7 @@ const ContactList: React.FC<{ onlineUsers: string[] }> = ({ onlineUsers }) => {
 		});
 
 	return (
-		<div className="w-full">
+		<div className="w-full flex-grow">
 			<h4 className="bg-violet-800 font-semibold pl-5 py-2">Contacts</h4>
 			<div className="max-h-[600px] overflow-y-scroll">
 				{contactsArray.map((contact) => {

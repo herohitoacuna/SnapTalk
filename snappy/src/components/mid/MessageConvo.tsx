@@ -1,11 +1,7 @@
 import { useContext, useEffect, useRef } from "react";
-import IMessage from "../../interfaces/Message";
-
 import DateSeparator from "./DateSeparator";
-import Box from "@mui/material/Box";
 import { getItem } from "../../utils/localStorageItems";
 import { MessagesContext } from "../../context/messagesContext";
-import { useParams } from "react-router-dom";
 import SenderMessage from "./SenderMessage";
 import RecipientMessage from "./RecipientMessage";
 
@@ -70,7 +66,7 @@ const MessageConvo = () => {
 	return (
 		<div
 			ref={containerRef}
-			className="grow w-full px-12 pt-5 pb-3 overflow-y-auto scroll-smooth
+			className="grow w-full px-12 pt-5 pb-3 overflow-y-auto
 				flex flex-col gap-5">
 			{conversation}
 		</div>

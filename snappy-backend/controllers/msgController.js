@@ -33,10 +33,8 @@ async function putSeenMessages(req, res) {
 
 		const messages = await Message.updateMany(
 			{
-				$or: [
-					{ sender: senderId, recipient: recipientId },
-					{ sender: recipientId, recipient: senderId },
-				],
+				sender: recipientId,
+				recipient: senderId,
 				seen: false,
 			},
 			{ seen: true },
