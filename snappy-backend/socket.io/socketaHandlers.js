@@ -21,8 +21,6 @@ function onDisconnect(socket, io) {
 }
 
 function sendPrivateMessage(socket, io) {
-	const userId = socket.data.userId;
-
 	socket.on("send-private-msg", async (msgObj) => {
 		try {
 			const userId = socket.data.userId;

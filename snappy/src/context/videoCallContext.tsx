@@ -3,13 +3,14 @@ import socket from "../socketConnection";
 import { getItem } from "../utils/localStorageItems";
 
 interface IVideoCallContext {
-	localVideoRef: React.RefObject<HTMLVideoElement> | null;
-	remoteVideoRef: React.RefObject<HTMLVideoElement> | null;
+	localVideoRef: React.RefObject<HTMLVideoElement>;
+	remoteVideoRef: React.RefObject<HTMLVideoElement>;
 	openCall: boolean;
+	contactId: string;
+	changeContactId: (contactId: string) => void;
 	onOpenCall: () => void;
-	makeVideoCall: (contactId: string) => void;
-	// answerCall: (contactId: string) => void;
-	// endCall: () => void;
+	makeVideoCall: () => void;
+	answerCall: () => void;
 }
 
 interface IConstraints {
@@ -17,143 +18,166 @@ interface IConstraints {
 	audio: boolean;
 }
 
-interface callData {
+interface ICallData {
 	callerId: string;
 	contactId: string;
 }
 
-interface ICandidate extends callData {
+interface ICandidate extends ICallData {
 	candidate: any;
 }
 
-interface IOffer extends callData {
+interface IOffer extends ICallData {
 	offer: any;
 }
 
-interface IAnswer extends callData {
+interface IAnswer extends ICallData {
 	answer: any;
 }
 
 const initialState: IVideoCallContext = {
-	localVideoRef: null,
-	remoteVideoRef: null,
+	localVideoRef: useRef<HTMLVideoElement>(null),
+	remoteVideoRef: useRef<HTMLVideoElement>(null),
 	openCall: false,
+	contactId: "",
+	changeContactId: (contactId: string) => {},
 	onOpenCall: () => {},
-	makeVideoCall: (contactId: string) => {},
-	// answerCall: (contactId: string) => {},
-	// endCall: () => {},
+	makeVideoCall: () => {},
+	answerCall: () => {},
 };
 
 export const VideoCallContext = createContext<IVideoCallContext>(initialState);
 
 export const VideoCallProvider = ({ children }: { children: React.ReactNode }) => {
 	const [openCall, setOpenCall] = useState(false);
-	const [constraints, setConstraints] = useState<IConstraints>({ video: true, audio: true });
+	const [calling, setCalling] = useState(false);
+	const [constraints, setConstraints] = useState<IConstraints>({ video: false, audio: true });
+
+	const [contactId, setContactId] = useState<string>("");
+
 	const localVideoRef = useRef<HTMLVideoElement>(null);
 	const remoteVideoRef = useRef<HTMLVideoElement>(null);
-	let peerConnection: RTCPeerConnection | null;
 
-	const handleOpenCall = () => {
+	const [candidateData, setCandidateData] = useState<ICandidate | null>(null);
+	const [offerData, setOfferData] = useState<IOffer | null>(null);
+	const [answerData, setAnswerData] = useState<IAnswer | null>(null);
+
+	const changeContactId = useCallback((contactId: string) => {
+		setContactId(contactId);
+	}, []);
+
+	const handleOpenCall = useCallback(() => {
 		setOpenCall(true);
-	};
+	}, []);
 
-	// call when use click the audio call only
-	const audioCallConstraints = () => {
-		setConstraints({ video: false, audio: true });
-	};
-	// receive candidate and addCandidate(candidate)
-
-	// add the streams to the peerConnection so that remotePeer can receive this
-
-	// add the stream to the video element for the local video user
-	// create offer
-	// set as localDescription
-	// send to contact
-
-	// receive an answer
-	// set as remoteDescription
-
-	//receive an video-audio stream from remote peer
-	// add the remote stream to the remote video user
-
-	const makeVideoCall = async (contactId: string) => {
-		console.log("videoCall");
+	const makeVideoCall = useCallback(async () => {
 		setOpenCall(true);
-		const configuration = {
-			// iceServers: [{ "urls": "stun.12connect.com:3478" }],
-		};
+
+		const peerConnection = new RTCPeerConnection({
+			iceServers: [{ urls: "stun.12connect.com:3478" }],
+		});
 
 		const localStream = await navigator.mediaDevices.getUserMedia(constraints);
-		if (!localVideoRef.current) return;
+		if (!localVideoRef.current || !peerConnection) return;
+
 		localVideoRef.current.srcObject = localStream;
 
-		peerConnection = new RTCPeerConnection(configuration);
-
-		localStream.getTracks().forEach((track) => {
-			console.log(track);
-			if (!peerConnection) return;
-			peerConnection.addTrack(track, localStream);
-		});
 		peerConnection.addEventListener("icecandidate", (e) => {
 			const candidateData: ICandidate = {
 				callerId: getItem("id"),
-				contactId: contactId,
+				contactId,
 				candidate: e.candidate,
 			};
 
-			socket.emit("localCandidate", candidateData);
+			console.log(candidateData);
+			socket.emit("iceCandidate", candidateData);
+		});
+
+		localStream.getTracks().forEach((track) => {
+			console.log(track);
+			peerConnection.addTrack(track, localStream);
 		});
 
 		const offer = await peerConnection.createOffer();
 		console.log(offer);
-		peerConnection.setLocalDescription(offer);
+		await peerConnection.setLocalDescription(offer);
+
 		const callData: IOffer = {
 			callerId: getItem("id"),
 			contactId: contactId,
 			offer: offer,
 		};
 		socket.emit("offer", callData);
+
 		peerConnection.addEventListener("track", (event) => {
 			console.log(event);
 			const [remoteStream] = event.streams;
 			if (!remoteVideoRef.current) return;
 			remoteVideoRef.current.srcObject = remoteStream;
 		});
-	};
+
+		await peerConnection.setRemoteDescription(answerData?.answer);
+	}, [constraints, contactId]);
+
+	const answerCall = useCallback(async () => {
+		if (!candidateData || !offerData) return;
+
+		const remoteConnection = new RTCPeerConnection();
+		await remoteConnection.addIceCandidate(candidateData.candidate);
+
+		remoteConnection.addEventListener("icecandidate", (e) => {
+			const remoteCandidate: ICandidate = { ...candidateData, candidate: e.candidate };
+			socket.emit("iceCandidate", remoteCandidate);
+		});
+
+		await remoteConnection.setRemoteDescription(offerData.offer);
+		const answer = await remoteConnection.createAnswer();
+		remoteConnection.setLocalDescription(answer);
+
+		const callData: IAnswer = {
+			callerId: offerData.callerId,
+			contactId: offerData.contactId,
+			answer: answer,
+		};
+		socket.emit("answer", callData);
+	}, [candidateData, offerData]);
 
 	useEffect(() => {
-		socket.on("remoteCandidate", (receiveCandidateData: ICandidate) => {
-			console.log(receiveCandidateData);
-			peerConnection?.addIceCandidate(receiveCandidateData.candidate);
+		if (openCall) {
+			makeVideoCall();
+		}
+	}, [openCall, makeVideoCall]);
+
+	useEffect(() => {
+		socket.on("iceCandidate", (candidateData: ICandidate) => {
+			console.log("ICE candidate");
+			console.log(candidateData);
+			setCandidateData(candidateData);
 		});
 
-		socket.on("offer", (receiveOfferData: IOffer) => {
-			console.log(receiveOfferData.offer);
-			peerConnection?.setRemoteDescription(receiveOfferData.offer);
+		socket.on("offer", (offerData: IOffer) => {
+			setCalling(true);
+			console.log("offer");
+			console.log(offerData);
+			setOfferData(offerData);
 		});
 
-		socket.on("answer", (receiveAnswerData: IAnswer) => {
-			console.log(receiveAnswerData);
-			peerConnection?.setLocalDescription(receiveAnswerData.answer);
+		socket.on("answer", (answerData: IAnswer) => {
+			console.log("answer");
+			console.log(answerData);
+			setAnswerData(answerData);
 		});
-
-		const cleanup = () => {
-			socket.off("remoteCandidate");
-			socket.off("offer");
-			socket.off("answer");
-		};
-
-		return cleanup;
 	}, []);
 
-	const contextValue = {
+	const contextValue: IVideoCallContext = {
 		localVideoRef,
 		remoteVideoRef,
 		openCall,
+		contactId,
+		changeContactId,
 		onOpenCall: handleOpenCall,
 		makeVideoCall,
-		// answerCall,
-		// endCall,
+		answerCall,
 	};
 
 	return <VideoCallContext.Provider value={contextValue}>{children}</VideoCallContext.Provider>;

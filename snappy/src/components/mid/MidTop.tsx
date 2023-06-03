@@ -15,13 +15,12 @@ type MidTopProps = {
 };
 
 const MidTop: React.FC<MidTopProps> = ({ contact }) => {
-	const { onOpenCall, makeVideoCall, openCall } = useContext(VideoCallContext);
+	const { changeContactId, onOpenCall } = useContext(VideoCallContext);
 	const { contactId } = useParams();
 
 	useEffect(() => {
-		if (!openCall) return;
-		makeVideoCall(contactId as string);
-	}, [openCall]);
+		changeContactId(contactId);
+	}, [contactId]);
 
 	return (
 		<div className="w-full flex items-center px-5 py-1 text-white bg-container">

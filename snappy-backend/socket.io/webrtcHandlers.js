@@ -1,7 +1,8 @@
 function iceCandidate(socket, io) {
-	socket.on("localCandidate", (callData) => {
+	socket.on("iceCandidate", (callData) => {
+		console.log("Hello");
 		console.log(callData);
-		io.to(callData.contactId).emit("remoteCandidate", callData);
+		// io.to(callData.contactId).emit("remoteCandidate", callData);
 	});
 }
 
