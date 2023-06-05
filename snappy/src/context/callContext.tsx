@@ -71,12 +71,12 @@ export function CallProvider(props: { children: React.ReactNode }) {
 		// Get local media stream;
 		const constraint = { video: true, audio: true };
 		const localStream = await navigator.mediaDevices.getUserMedia(constraint);
-
+		
+		if (!localVideoRef.current) return;
+		localVideoRef.current.srcObject = localStream;
 		// Add local tracks to the local Peer connection
 		localStream.getTracks().forEach((track) => {
 			peerConnection.addTrack(track, localStream);
-			if (!localVideoRef.current) return;
-			localVideoRef.current.srcObject = localStream;
 		});
 
 		// Send a ICE candidate to the remote peer
