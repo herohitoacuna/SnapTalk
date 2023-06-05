@@ -10,23 +10,10 @@ import Register from "./components/auth/Register";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import { MessagesProvider } from "./context/messagesContext";
 import { SearchProvider } from "./context/searchContext";
-import { VideoCallProvider } from "./context/videoCallContext";
+import { CallProvider } from "./context/callContext";
+import VideoCall from "./routes/VideoCall";
 
 const router = createBrowserRouter([
-	{
-		path: "/",
-		element: <RootLayout />,
-		children: [
-			{
-				index: true,
-				element: <MidDefaultView />,
-			},
-			{
-				path: ":contactId",
-				element: <Mid />,
-			},
-		],
-	},
 	{
 		path: "/auth",
 		element: <Authentication />,
@@ -45,11 +32,30 @@ const router = createBrowserRouter([
 			},
 		],
 	},
+	{
+		path: "/",
+		element: <RootLayout />,
+		children: [
+			{
+				index: true,
+				element: <MidDefaultView />,
+			},
+			{
+				path: ":contactId",
+				element: <Mid />,
+			},
+		],
+	},
+	{
+		path: "/call",
+		element: <VideoCall />,
+	},
 ]);
 
 const App = () => {
 	return (
-		<VideoCallProvider>
+		// <VideoCallProvider>
+		<CallProvider>
 			<SearchProvider>
 				<MessagesProvider>
 					<ContactProvider>
@@ -57,7 +63,9 @@ const App = () => {
 					</ContactProvider>
 				</MessagesProvider>
 			</SearchProvider>
-		</VideoCallProvider>
+		</CallProvider>
+
+		// </VideoCallProvider>
 	);
 };
 

@@ -1,25 +1,25 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { CallContext } from "../context/callContext";
+import { MessagesContext } from "../context/messagesContext";
+import { getContactInfo } from "../fetchingApi/users";
 import IUser from "../interfaces/User";
+import socket from "../socketConnection";
+
+import Modal from "./shared/Modal";
 import ContactLandingView from "./mid/ContactLandingView";
 import MessagesContainer from "./mid/MessagesContainer";
-import { MessagesContext } from "../context/messagesContext";
-import socket from "../socketConnection";
-import { getContactInfo } from "../fetchingApi/users";
-import { VideoCallContext } from "../context/videoCallContext";
+import MakeCall from "./call/MakeCall";
 
-const Mid = () => {
+export default function Mid() {
 	const { contactId } = useParams();
+	// contexts
 	const { messages, fetchMessages, receiveMessage, updateMessageStatus } = useContext(MessagesContext);
+	const { openCall, handleContactId } = useContext(CallContext);
+
+	// states
 	const [openMsgContainer, setOpenMsgContainer] = useState(false);
-	const [contactDetails, setContactDetails] = useState<IUser>({
-		_id: "",
-		firstName: "",
-		lastName: "",
-		username: "",
-		email: "",
-		avatar: "",
-	});
+	const [contactDetails, setContactDetails] = useState<IUser>({} as IUser);
 
 	const fetchContactDetails = useCallback(async () => {
 		try {
@@ -30,9 +30,14 @@ const Mid = () => {
 		}
 	}, [contactId]);
 
-	function handleOpenMsgContainer() {
+	const handleOpenMsgContainer = () => {
 		setOpenMsgContainer(true);
-	}
+	};
+
+	useEffect(() => {
+		if (!contactId) return;
+		handleContactId(contactId);
+	}, [contactId]);
 
 	useEffect(() => {
 		if (!contactId) return;
@@ -46,7 +51,7 @@ const Mid = () => {
 		};
 
 		return cleanup;
-	}, [fetchContactDetails, fetchMessages, receiveMessage, updateMessageStatus]);
+	}, [fetchContactDetails, fetchMessages, receiveMessage, updateMessageStatus, contactId]);
 
 	useEffect(() => {
 		if (messages.length !== 0) {
@@ -58,6 +63,12 @@ const Mid = () => {
 
 	return (
 		<div className={`flex flex-col w-full md:w-[50vw] h-full bg-white`}>
+			{openCall && (
+				<Modal>
+					<MakeCall {...contactDetails} />
+				</Modal>
+			)}
+
 			{!openMsgContainer && (
 				<ContactLandingView
 					contactDetails={contactDetails}
@@ -67,6 +78,4 @@ const Mid = () => {
 			{openMsgContainer && <MessagesContainer contactDetails={contactDetails} />}
 		</div>
 	);
-};
-
-export default Mid;
+}

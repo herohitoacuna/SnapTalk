@@ -1,23 +1,19 @@
-import { useEffect, useState, useRef, useContext } from "react";
-import axios from "axios";
+import { useEffect, useState, useContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import socket from "../socketConnection";
-import { motion } from "framer-motion";
+import IUser from "../interfaces/User";
 
+import socket from "../socketConnection";
+import { getItem } from "../utils/localStorageItems";
+import { getProfile } from "../fetchingApi/users";
+
+import Modal from "../components/shared/Modal";
 import LeftSide from "../components/LeftSide";
 import RightSide from "../components/RightSide";
 import ProfileInfo from "../components/right-side/ProfileInfo";
-
-import IUser from "../interfaces/User";
-import { getItem } from "../utils/localStorageItems";
-import VideoAudioCall from "../components/VideoAudioCall";
-import { getProfile } from "../fetchingApi/users";
-import { VideoCallContext } from "../context/videoCallContext";
+import ReceiveCall from "../components/call/ReceiveCall";
+import { CallContext } from "../context/callContext";
 
 const RootLayout = () => {
-	const containerRef = useRef<HTMLDivElement>(null);
-	const { openCall } = useContext(VideoCallContext);
-
 	const navigate = useNavigate();
 	const [onlineUsers, setIsOnlineUsers] = useState<string[]>([]);
 	const [openPersonInfo, setOpenPersonInfo] = useState(false);
@@ -28,76 +24,63 @@ const RootLayout = () => {
 		email: "",
 		username: "",
 		avatar: "",
-		socketId: "",
-	} as IUser);
+	});
 
-	function handlePersonInfo(state: boolean) {
+	const { offerSDP } = useContext(CallContext);
+
+	const handlePersonInfo = (state: boolean) => {
 		setOpenPersonInfo(state);
-	}
+	};
 
-	async function fetchUserdetails() {
+	const fetchUserdetails = async () => {
 		try {
 			const { responseData } = await getProfile();
 			setUser(responseData);
 		} catch (error) {
 			console.log(error);
 		}
-	}
+	};
 
 	useEffect(() => {
 		if (!getItem("token")) {
 			navigate("/auth");
 			return;
 		}
-
-		socket.connect();
-
 		fetchUserdetails();
 
+		socket.connect();
 		socket.on("connected-users", (connectedUsers) => {
 			setIsOnlineUsers(connectedUsers);
 		});
 
 		const cleanup = () => {
-			if (socket.connected) {
-				socket.disconnect();
-			}
+			if (socket.connected) socket.disconnect();
 		};
 		return cleanup;
 	}, []);
 
 	return (
-		<div
-			ref={containerRef}
-			className="w-screen h-screen md:flex overflow-hidden">
+		<div className="w-screen h-screen md:flex overflow-hidden">
 			<LeftSide />
-			{openCall && (
-				<motion.div
-					drag
-					dragConstraints={containerRef}>
-					<VideoAudioCall />
-				</motion.div>
+			{offerSDP && (
+				<Modal>
+					<ReceiveCall />
+				</Modal>
 			)}
-
 			<Outlet />
 			<RightSide
-				firstName={user?.firstName}
-				lastName={user?.lastName}
-				avatar={user.avatar}
-				username={user?.username}
+				{...user}
 				onOpenPersonInfo={handlePersonInfo}
 				onlineUsers={onlineUsers}
 			/>
 			{openPersonInfo && (
-				<ProfileInfo
-					firstName={user.firstName}
-					lastName={user.lastName}
-					avatar={user.avatar}
-					username={user.username}
-					email={user.email}
-					onOpenPersonInfo={handlePersonInfo}
-					fetchUserdetails={fetchUserdetails}
-				/>
+				<Modal>
+					<ProfileInfo
+						{...user}
+						onOpenPersonInfo={handlePersonInfo}
+						fetchUserdetails={fetchUserdetails}
+					/>
+				</Modal>
 			)}
 		</div>
 	);

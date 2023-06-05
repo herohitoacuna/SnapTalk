@@ -134,10 +134,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 	}
 
 	return (
-		<div
-			className="h-screen w-screen absolute
-			flex items-center justify-center top-0 letf-0 
-			bg-black/40 ">
+		<>
 			<ToastContainer
 				toastClassName="bg-red"
 				limit={5}
@@ -267,7 +264,7 @@ const ProfileInfo: React.FC<ProfileInfoProps> = ({
 					</div>
 				</form>
 			</div>
-		</div>
+		</>
 	);
 };
 

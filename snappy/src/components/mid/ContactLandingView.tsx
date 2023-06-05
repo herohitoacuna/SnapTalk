@@ -24,8 +24,7 @@ const ContactLandingView: React.FC<ContactLandingView> = ({ contactDetails, onOp
 		<div className="h-full w-full flex flex-col  gap-4 items-center justify-center text-white bg-indigo-900">
 			<Avatar
 				src={avatar}
-				sizes="45px"
-				sx={{ fontSize: "2rem" }}>
+				sx={{ fontSize: "2rem", width: 45 }}>
 				{defaultChars(firstName, lastName)}
 			</Avatar>
 			<h4 className="text-4xl">{`${firstName} ${lastName}`}</h4>

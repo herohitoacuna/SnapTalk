@@ -12,7 +12,7 @@ const userRoutes = require("./routes/userRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 
 const { socketAuth } = require("./socket.io/socketAuth");
-const { onConnection, onDisconnect, sendPrivateMessage } = require("./socket.io/socketaHandlers");
+const { onConnection, onDisconnect, sendPrivateMessage } = require("./socket.io/socketHandlers");
 
 const app = express();
 const http = require("http");

@@ -1,26 +1,21 @@
+import { useContext } from "react";
+import IUser from "../../interfaces/User";
+
 import { Avatar } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import CallIcon from "@mui/icons-material/Call";
-import IconButton from "../shared/IconButton";
 
-import IUser from "../../interfaces/User";
 import { defaultChars } from "../../utils/avatarDefaultChars";
-import { useContext, useEffect } from "react";
-import { VideoCallContext } from "../../context/videoCallContext";
-import { useParams } from "react-router-dom";
+import IconButton from "../shared/IconButton";
+import { CallContext } from "../../context/callContext";
 
 type MidTopProps = {
 	contact: IUser | undefined;
 };
 
 const MidTop: React.FC<MidTopProps> = ({ contact }) => {
-	const { changeContactId, onOpenCall } = useContext(VideoCallContext);
-	const { contactId } = useParams();
-
-	useEffect(() => {
-		changeContactId(contactId);
-	}, [contactId]);
+	const { makeCall } = useContext(CallContext);
 
 	return (
 		<div className="w-full flex items-center px-5 py-1 text-white bg-container">
@@ -43,12 +38,12 @@ const MidTop: React.FC<MidTopProps> = ({ contact }) => {
 
 			<div className="ml-auto flex">
 				<IconButton
-					onClick={onOpenCall}
+					onClick={makeCall}
 					className="hover-container"
 					icon={<VideocamIcon sx={{ color: "white", fontSize: "2rem" }} />}
 				/>
 				<IconButton
-					onClick={onOpenCall}
+					onClick={() => {}}
 					className="hover-container lg:mr-3"
 					icon={<CallIcon sx={{ color: "white", fontSize: "2rem" }} />}
 				/>
